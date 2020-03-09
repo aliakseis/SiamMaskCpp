@@ -1,10 +1,18 @@
-#include <dirent.h>
-#include <sys/stat.h>
+//#include <dirent.h>
+//#include <sys/stat.h>
+
+#include "SiamMask/siammask.h"
+
+#include "get_parameters.h"
+
+//#include <argparse.hpp>
 
 #include <opencv2/opencv.hpp>
 
-#include <argparse.hpp>
-#include <SiamMask/siammask.h>
+#include <filesystem>
+
+
+namespace fs = std::filesystem;
 
 bool dirExists(const std::string& path)
 {
@@ -27,14 +35,16 @@ std::vector<std::string> listDir(const std::string& path, const std::vector<std:
     }
 
     std::vector<std::string> files;
-    DIR *dir = opendir(path.c_str());
+    //DIR *dir = opendir(path.c_str());
 
-    if(dir == nullptr)
-        return files;
+    //if(dir == nullptr)
+    //    return files;
 
-    struct dirent *pdirent;
-    while ((pdirent = readdir(dir)) != nullptr) {
-        std::string name(pdirent->d_name);
+    //struct dirent *pdirent;
+
+    for (const auto & file : fs::directory_iterator(path)) {
+    //while ((pdirent = readdir(dir)) != nullptr) {
+        std::string name(file.path().filename().string());
         for(const auto& ending : match_ending){
             if(ends_with(name, ending)) {
                 files.push_back(path + "/" + name);
@@ -42,7 +52,7 @@ std::vector<std::string> listDir(const std::string& path, const std::vector<std:
             }
         }
     }
-    closedir(dir);
+    //closedir(dir);
 
     return files;
 }
@@ -66,20 +76,24 @@ void drawBox(
 }
 
 int main(int argc, const char* argv[]) try {
+    /*
     argparse::ArgumentParser parser;
     parser.addArgument("-m", "--modeldir", 1, false);
     parser.addArgument("-c", "--config", 1, false);
     parser.addFinalArgument("target");
 
     parser.parse(argc, argv);
+    */
+
+    auto[modeldir, config, target_dir] = getParameters(argc, argv);
 
     torch::Device device(torch::kCUDA);
 
-    SiamMask siammask(parser.retrieve<std::string>("modeldir"), device);
+    SiamMask siammask(modeldir, device);
     State state;
-    state.load_config(parser.retrieve<std::string>("config"));
+    state.load_config(config);
 
-    const std::string target_dir = parser.retrieve<std::string>("target");
+    //const std::string target_dir = parser.retrieve<std::string>("target");
     std::vector<std::string> image_files = listDir(target_dir, {"jpg", "png", "bmp"});
     std::sort(image_files.begin(), image_files.end());
 
@@ -122,8 +136,8 @@ int main(int argc, const char* argv[]) try {
     printf("SiamMask Time: %.1fs Speed: %.1ffps (with visulization!)\n", total_time, fps);
 
     return EXIT_SUCCESS;
-} catch (std::exception& e) {
-    std::cout << "Exception thrown!\n" << e.what() << std::endl;
+} catch (const std::exception& e) {
+    std::cout << "Exception thrown!\n" << typeid(e).name() << '\n' << e.what() << std::endl;
     return EXIT_FAILURE;
 }
 

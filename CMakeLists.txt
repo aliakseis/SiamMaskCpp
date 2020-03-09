@@ -26,6 +26,6 @@ include_directories(
     ${TORCH_INCLUDE_DIRS}
 )
 
-add_executable(demo demo.cpp)
+add_executable(demo demo.cpp get_parameters.cpp)
 target_link_libraries(demo ${OpenCV_LIBRARIES} ${TORCH_LIBRARIES})
-set_property(TARGET demo PROPERTY CXX_STANDARD 11)
+set_property(TARGET demo PROPERTY CXX_STANDARD 17)

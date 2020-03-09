@@ -1,13 +1,13 @@
 #ifndef SIAMMASK_SIAMMASK_Hh
 #define SIAMMASK_SIAMMASK_Hh
 
-#include <tuple>
-#include <opencv2/imgproc.hpp>
-#include <torch/script.h>
-
 #include "convert.h"
 #include "numpy.h"
 #include "state.h"
+
+#include <tuple>
+#include <opencv2/imgproc.hpp>
+#include <torch/script.h>
 
 namespace np = numpy;
 
@@ -312,10 +312,10 @@ inline void siameseTrack(
     );
 
     const int64_t score_size = state.score_size();
-    std::vector<long> best_pscore_id_mask = np::unravel_index(best_pscore_id, {5L, score_size, score_size});
+    std::vector<long> best_pscore_id_mask = np::unravel_index(best_pscore_id, {5L, static_cast<long>(score_size), static_cast<long>(score_size)});
 
-    const long pos_x = best_pscore_id_mask[2];
-    const long pos_y = best_pscore_id_mask[1];
+    const long long pos_x = best_pscore_id_mask[2];
+    const long long pos_y = best_pscore_id_mask[1];
     torch::Tensor mask_tensor = model.refineMask(
         resnet_features, corr_feature,
         torch::tensor({pos_y, pos_x})
